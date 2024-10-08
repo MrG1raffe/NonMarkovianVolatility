@@ -24,6 +24,16 @@ class HestonParams(ModelParams):
 
 
 @dataclass
+class FractionalVolterraHestonParams(HestonParams):
+    """
+    Heston model parameters.
+    """
+    H: float = 0.5
+    eps: float = 0
+
+
+
+@dataclass
 class PricingParams:
     """
     A generic class for product pricing parameters.

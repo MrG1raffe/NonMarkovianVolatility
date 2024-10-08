@@ -324,9 +324,9 @@ class VanillaOption(Product):
                     ax.fill_between(log_mon, iv_market[i] - 0.5 * np.array(bid_ask_spread[i]),
                                     iv_market[i] + 0.5 * np.array(bid_ask_spread[i]), color="r",
                                     label="bid-ask", alpha=0.2)
-            ax.plot(log_mon, iv_model[i], 'v--', ms=4, color="b", label="model")
+            ax.plot(log_mon, iv_model[i], 'v--', ms=4, label=f"T = {np.round(maturity, 2)}")
             if option_prices_low_model is not None:
-                ax.fill_between(log_mon, iv_model_low[i], iv_model_up[i], color="b",
+                ax.fill_between(log_mon, iv_model_low[i], iv_model_up[i],
                                 label="MC confidence intervals", alpha=0.2)
 
             ax.grid('on')

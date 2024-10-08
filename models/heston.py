@@ -4,7 +4,7 @@ from numpy import float_, complex_, complex128
 from typing import Union, Tuple
 from dataclasses import dataclass
 from math import ceil
-from numba import jit, njit, prange
+from numba import jit, prange
 
 from models.characteristic_function_model import CharacteristicFunctionModel
 from models.monte_carlo_model import MonteCarloModel
@@ -15,7 +15,7 @@ from utility.utility import DEFAULT_SEED, to_numpy
 @dataclass
 class Heston(CharacteristicFunctionModel, MonteCarloModel):
     """
-    A class describing the Lifted Heston model
+    A class describing the Heston model
 
     dF_t/F_t = sqrt(V_t) * dW_t,
     V_t = V_0 + ∫ λ * (θ - V_s) ds + ∫ ν * sqrt(V_s) * dB_s, d<W, B>_t = ρ * dt.
@@ -25,10 +25,8 @@ class Heston(CharacteristicFunctionModel, MonteCarloModel):
     nu: see the equation.
     rho: correlation between B_t and W_t.
     V0: initial value of variance.
-    model_type: whether the underlying price follows normal or log-normal dynamics. Either "normal" or "log-normal".
-    normalize_variance: whether to normalize the variance by ξ_t in the price dynamics.
     """
-    theta: Union[float, NDArray[float_]]
+    theta: float
     lam: float
     nu: float
     rho: float
@@ -87,6 +85,7 @@ class Heston(CharacteristicFunctionModel, MonteCarloModel):
 
         res = _jit_parallel_char_func(t_grid=t_grid, u_arr=u_arr, nu=self.nu, lam=self.lam,
                                       rho=self.rho, theta=self.theta, V0=self.V0)
+        res *= np.exp(u_arr * x)
         return np.reshape(res, u_shape)
 
     def get_variance_trajectory(
@@ -189,7 +188,7 @@ def _jit_riccati_func(
     The function appearing on the right hand side of the Riccati equation for psi_2.
 
     :param u: characteristic function argument.
-    :param psi: psi as a number or ararat.
+    :param psi: psi as a number or array.
     :param nu: model parameter.
     :param lam: model parameter.
     :param rho: model parameter.
