@@ -34,8 +34,8 @@ class Heston(CharacteristicFunctionModel, MonteCarloModel):
 
     @staticmethod
     def compile():
-        _jit_parallel_char_func(t_grid=np.linspace(0, 1, 3), u_arr=np.zeros(2),
-                                nu=1, lam=0, rho=0, theta=0.1, V0=0.1)
+        _jit_parallel_char_func(t_grid=np.linspace(0, 1, 100), u_arr=np.array([0, 0.5]),
+                                nu=1, lam=0.1, rho=-0.1, theta=0.1, V0=0.1)
 
     def g0(
         self,
@@ -104,7 +104,7 @@ class Heston(CharacteristicFunctionModel, MonteCarloModel):
         :param B_traj: pre-simulated trajectories of the BM B_t corresponding to the stochastic volatility.
             By default, None, and will be simulated within the function.
         :return: an array of shape (size, len(t_grid)) for the variance and an array of shape
-            (size, n_stoch_factors, len(t_grid)) for U if `return_factors` == True.
+            (size, 1, len(t_grid)) for U if `return_factors` == True.
         """
         if B_traj is None:
             # simulation of B_traj
@@ -124,8 +124,7 @@ class Heston(CharacteristicFunctionModel, MonteCarloModel):
 
         for k in range(len(t_grid) - 1):
             V_k = V_traj[:, k]
-            V_traj[:, k + 1] = V_k + self.lam * (self.theta - V_k) * dt[k] + \
-                               self.nu * np.sqrt(np.maximum(V_k, 0)) * dB_traj[:, k]
+            V_traj[:, k + 1] = V_k + self.lam * (self.theta - V_k) * dt[k] + self.nu * np.sqrt(np.maximum(V_k, 0)) * dB_traj[:, k]
             V_traj[:, k + 1] = np.maximum(0, V_traj[:, k + 1])
 
         return V_traj
@@ -177,7 +176,7 @@ class Heston(CharacteristicFunctionModel, MonteCarloModel):
 
 
 @jit(nopython=True)
-def _jit_riccati_func(
+def _jit_heston_riccati_func(
     u: Union[complex, NDArray[complex_]],
     psi: NDArray[complex_],
     nu: float,
@@ -216,7 +215,7 @@ def _jit_parallel_char_func(
 @jit(nopython=True)
 def _jit_char_func(
     t_grid: NDArray[float_],
-    u: NDArray[complex_],
+    u: complex,
     nu: float,
     lam: float,
     rho: float,
@@ -247,8 +246,9 @@ def _jit_char_func(
         raise ValueError("Time grid should be increasing.")
 
     for i in range(len(t_grid) - 1):
-        F_i = _jit_riccati_func(u=u, psi=psi[i], nu=nu, lam=lam, rho=rho)
+        F_i = _jit_heston_riccati_func(u=u, psi=psi[i], nu=nu, lam=lam, rho=rho)
         psi[i + 1] = psi[i] + dt[i] * F_i
 
     phi = np.trapz(psi * theta * lam, x=t_grid)
+
     return np.exp(phi + psi[-1] * V0)

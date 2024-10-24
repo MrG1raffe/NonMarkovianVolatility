@@ -32,6 +32,17 @@ class FractionalVolterraHestonParams(HestonParams):
     eps: float = 0
 
 
+@dataclass
+class LiftedHestonParams(HestonParams):
+    """
+    Heston model parameters.
+    """
+    c: NDArray[float_] = None
+    x: NDArray[float_] = None
+    H: float = None
+    n: int = None
+    r: float = None
+
 
 @dataclass
 class PricingParams:
