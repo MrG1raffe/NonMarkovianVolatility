@@ -332,5 +332,5 @@ class VanillaOption(Product):
             ax.grid('on')
             ax.legend()
             ax.set_xlabel(r'$\log(K / F0)$')
-            ax.set_title(title_option + f' and TTM={np.round(maturity, 2)}')
+            ax.set_title(title_option + f' TTM={np.round(maturity, 2)}')
 
